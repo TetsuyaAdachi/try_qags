@@ -1,20 +1,24 @@
+import torch
+from transformers import T5ForConditionalGeneration, T5Tokenizer
+
+# 参考
+# https://github.com/sonoisa/deep-question-generation/blob/main/t5_japanese_question_generation.ipynb
+
 def generate_question(summary_text, answers):
-    import torch
-    from transformers import T5ForConditionalGeneration, T5Tokenizer
+    """要約文と解答キーワードを入力に、質問文を解答します"""
 
-    model_name_or_path = "sonoisa/t5-base-japanese-question-generation"
-
-    model = T5ForConditionalGeneration.from_pretrained(model_name_or_path)
+    model_name = "sonoisa/t5-base-japanese-question-generation"
+    model = T5ForConditionalGeneration.from_pretrained(model_name)
     model.eval()
     if torch.cuda.is_available():
         model.cuda()
 
-    tokenizer = T5Tokenizer.from_pretrained(model_name_or_path, is_fast=True)
+    tokenizer = T5Tokenizer.from_pretrained(model_name, is_fast=True)
 
     from tqdm.auto import tqdm
 
-    INPUT_MAX_LEN = 512  # モデルに入力されるトークン列の最大長。最大長を超えたトークンは切り捨てられる。
-    OUTPUT_MAX_LEN = 64  # モデルから出力されるトークン列の最大長。最大長を超えないように文が生成されるはず。
+    INPUT_MAX_LEN = 1024  # モデルに入力されるトークン列の最大長。最大長を超えたトークンは切り捨てられる。
+    OUTPUT_MAX_LEN = 128  # モデルから出力されるトークン列の最大長。最大長を超えないように文が生成されるはず。
 
     answer_context_list = []
 

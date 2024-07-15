@@ -1,31 +1,13 @@
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 from transformers import pipeline
-from transformers import T5ForConditionalGeneration, T5Tokenizer
-from transformers import QuestionAnsweringPipeline
 
-from transformers import AutoTokenizer
-from transformers import AutoModelForQuestionAnswering
 from get_rouge_score import get_rouge_score
-from transformers import pipeline
 import csv
 from generate_question import generate_question
 
 # 参考
 # https://zenn.dev/ty_nlp/articles/aaad1aec70d53e
 
-INDEX = 1
 
-article_path = f"docs/doc_{INDEX}/document.txt"
-summary_path = f"docs/doc_{INDEX}/gpt_result.txt"
-annotation_path = f"docs/doc_{INDEX}/annotation.csv"
-
-with open(article_path) as fa:
-    original_text = fa.read()
-with open(summary_path) as fs:
-    summary_text = fs.read()
-with open(annotation_path) as fb:
-    csvreader = csv.reader(fb)
-    answers = next(csvreader)
 
 model_name = "tsmatz/roberta_qa_japanese"
 qap = pipeline(
@@ -57,5 +39,25 @@ def score_summaries(original_text, summary_text):
 
 if __name__ == "__main__":
     # 点数を計算
-    score = score_summaries(original_text, summary_text)
-    print(f"Summary Score: {score}")
+    scores = []
+    for index in range(1, 11):
+        article_path = f"docs/doc_{index}/document.txt"
+        summary_path = f"docs/doc_{index}/gpt_result.txt"
+        annotation_path = f"docs/doc_{index}/annotation.csv"
+
+        with open(article_path) as fa:
+            original_text = fa.read()
+        with open(summary_path) as fs:
+            summary_text = fs.read()
+        with open(annotation_path) as fb:
+            csvreader = csv.reader(fb)
+            answers = next(csvreader)
+
+        score = score_summaries(original_text, summary_text)
+        print(f"Summary Score: {score}")
+        scores.append(score)
+
+    with open("scores.txt", "w") as file:
+        for score in scores:
+            rounded_score = round(score, 3)
+            file.write(f"{rounded_score}\n")
