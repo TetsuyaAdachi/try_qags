@@ -10,17 +10,20 @@ def safe_get(lst, index, default=None):
 
 def get_keyword(text: str):
     # 形態素解析器のインスタンス生成
-    m = MeCab.Tagger()
 
-    # テキストを形態素解析
-    node = m.parse(text)
+    # NEologd辞書のパスを指定
+    dicdir = "/opt/homebrew/lib/mecab/dic/mecab-ipadic-neologd"  # インストール時に表示されたパスに置き換えてください
+    mecab = MeCab.Tagger(f"-d {dicdir}")
+
+    # 解析結果を取得
+    node = mecab.parseToNode(text)
 
     # 固有名詞を抽出
-    keywords = []
-    for line in node.split("\n"):
-        word_class = safe_get(line.split("\t"), 4)
-        if word_class and word_class == "名詞-普通名詞-一般":
-            keywords.append(line.split("\t")[0])
+    results = []
+    while node:
+        features = node.feature.split(",")
+        if features[0] == "名詞" and features[1] == "固有名詞":
+            results.append(node.surface)
+        node = node.next
 
-    result = list(set(keywords))
-    return result
+    return list(set(results))

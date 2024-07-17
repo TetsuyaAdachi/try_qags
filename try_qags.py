@@ -55,9 +55,9 @@ def score_summaries(original_text, summary_text, answers):
 
 
 if __name__ == "__main__":
-    MAX_NUM = 30
+    MAX_NUM = 29
 
-    for index in range(1, MAX_NUM):
+    for index in range(1, MAX_NUM + 1):
         article_path = f"docs/doc_{index}/document.txt"
         summary_path = f"docs/doc_{index}/gpt_result.txt"
         annotation_path = f"docs/doc_{index}/annotation.csv"
