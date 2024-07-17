@@ -4,6 +4,7 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 # 参考
 # https://github.com/sonoisa/deep-question-generation/blob/main/t5_japanese_question_generation.ipynb
 
+
 def generate_question(summary_text, answers):
     """要約文と解答キーワードを入力に、質問文を解答します"""
 
@@ -13,7 +14,11 @@ def generate_question(summary_text, answers):
     if torch.cuda.is_available():
         model.cuda()
 
-    tokenizer = T5Tokenizer.from_pretrained(model_name, is_fast=True)
+    tokenizer = T5Tokenizer.from_pretrained(
+        model_name,
+        is_fast=True,
+        legacy=False,
+    )
 
     from tqdm.auto import tqdm
 
@@ -34,29 +39,42 @@ def generate_question(summary_text, answers):
 
         # 入力文をトークナイズする。
         tokenized_inputs = tokenizer.batch_encode_plus(
-            [input], max_length=INPUT_MAX_LEN, truncation=True, 
-            padding="longest", return_tensors="pt")
+            [input],
+            max_length=INPUT_MAX_LEN,
+            truncation=True,
+            padding="longest",
+            return_tensors="pt",
+        )
 
-        input_ids = tokenized_inputs['input_ids']
-        input_mask = tokenized_inputs['attention_mask']
+        input_ids = tokenized_inputs["input_ids"]
+        input_mask = tokenized_inputs["attention_mask"]
         if torch.cuda.is_available():
             input_ids = input_ids.cuda()
             input_mask = input_mask.cuda()
 
         # 問題文を生成する。
-        tokenized_outputs = model.generate(input_ids=input_ids, attention_mask=input_mask, 
-            max_length=OUTPUT_MAX_LEN, return_dict_in_generate=True, decoder_start_token_id=0,
-            temperature=0.0,  # 生成にランダム性を入れる温度パラメータ
+        tokenized_outputs = model.generate(
+            input_ids=input_ids,
+            attention_mask=input_mask,
+            max_length=OUTPUT_MAX_LEN,
+            return_dict_in_generate=True,
+            decoder_start_token_id=0,
+            # temperature=0.0,  # 生成にランダム性を入れる温度パラメータ
             num_beams=4,  # ビームサーチの探索幅
             # diversity_penalty=1.0,  # 生成結果の多様性を生み出すためのペナルティパラメータ
             # num_beam_groups=4,  # ビームサーチのグループ
             num_return_sequences=1,  # 生成する文の数
+            do_sample=False,
         )
 
         # 生成された問題文のトークン列を文字列に変換する。
-        outputs = [tokenizer.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=False) 
-            for ids in tokenized_outputs.sequences]
+        outputs = [
+            tokenizer.decode(
+                ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )
+            for ids in tokenized_outputs.sequences
+        ]
 
-        generated_questions.append(outputs) 
+        generated_questions.append(outputs)
 
     return generated_questions
